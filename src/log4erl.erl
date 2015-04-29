@@ -3,14 +3,12 @@
 -author("Ahmed Al-Issaei").
 -license("MPL-1.1").
 
--behaviour(application).
-
 -include("../include/log4erl.hrl").
 
 %% API
 -export([change_log_level/1, change_log_level/2]).
 -export([change_level/2, change_level/3]).
--export([add_logger/1, conf/1]).
+-export([add_logger/1]).
 -export([add_appender/2, add_appender/3]).
 -export([add_file_appender/2, add_file_appender/3]).
 -export([add_console_appender/2, add_console_appender/3]).
@@ -29,20 +27,6 @@
 -export([error/1, error/2, error/3]).
 -export([fatal/1, fatal/2, fatal/3]).
 -export([debug/1, debug/2, debug/3]).
-
-%% Application callbacks
--export([start/2, stop/1]).
-
-%%======================================
-%% application callback functions
-%%======================================
-start(_Type, []) ->
-    ?LOG("Starting log4erl app~n"),
-    log4erl_sup:start_link(?DEFAULT_LOGGER).
-
-stop(_State) ->
-    log_filter_codegen:reset(),
-    ok.
 
 add_logger(Logger) ->
     try_msg({add_logger, Logger}).
@@ -96,9 +80,6 @@ get_appenders() ->
 
 get_appenders(Logger) ->
     try_msg({get_appenders, Logger}).
-
-conf(File) ->
-    log4erl_conf:conf(File).
 
 change_format(Appender, Format) ->
     try_msg({change_format, ?DEFAULT_LOGGER, Appender, Format}).
@@ -214,4 +195,3 @@ handle_call({change_format, Logger, Appender, Format}) ->
     log_manager:change_format(Logger, Appender, Format);
 handle_call({log, Logger, Level, Log, Data}) ->
     log_manager:log(Logger, Level, Log, Data).
-

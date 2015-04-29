@@ -8,18 +8,30 @@
 -include("../include/log4erl.hrl").
 
 %% API
--export([start_link/1]).
+-export([start_link/0]).
 -export([add_logger/1]).
 -export([add_guard/4]).
 
 %% Supervisor callbacks
 -export([init/1]).
 
-start_link(Default_logger) ->
+-define(gv(K, P), proplists:get_value(K, P)).
+-define(gv(K, P, D), proplists:get_value(K, P, D)).
+
+start_link() ->
     R = supervisor:start_link({local, ?MODULE}, ?MODULE, []),
-    %log4erl:start_link(Default_logger),
-    add_logger(Default_logger),
     ?LOG2("Result in supervisor is ~p~n",[R]),
+    add_logger(?DEFAULT_LOGGER),
+    lists:foreach(
+        fun({LName, Appenders}) ->
+            LName1 = log4erl_utils:to_atom(LName),
+            add_logger(LName1),
+            lists:foreach(
+                fun({Mod, AName, Conf}) ->
+                    add_guard(LName1, Mod, log4erl_utils:to_atom(AName),
+                              {conf, Conf})
+                end, Appenders)
+        end, ?gv(loggers, application:get_all_env(), [])),
     R.
 
 add_guard(Logger, Appender, Name, Conf) ->
@@ -42,33 +54,12 @@ add_logger(Name) when is_list(Name) ->
 	  10000,
 	  worker,
 	  [log_manager]},
-    
     ?LOG2("Adding ~p to ~p~n",[C1, ?MODULE]),
     supervisor:start_child(?MODULE, C1).
-    %add_guard(N2).
 
 %%======================================
 %% supervisor callback functions
 %%======================================
 init([]) ->
     ?LOG("Starting supervisor~n"),
-    %% No children to be added yet.
-    %% The default has to be added from log4erl
-    
-    % start log4erl gen_server
-    %% _Child =  {log4erl_p,
-%% 	  {log4erl, start_link ,[Default_logger]},
-%% 	  permanent,
-%% 	  10000,
-%% 	  worker,
-%% 	  [log4erl]},
-    
-    {ok,
-     {
-       {one_for_one,3,10}, 
-       []
-       %[]
-      }
-    }.
-
-
+    {ok, {{one_for_one, 3, 10}, []}}.

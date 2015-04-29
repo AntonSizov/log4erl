@@ -135,7 +135,10 @@ get_token_value(millis, Log) ->
 get_token_value(log, Log) ->
     Msg = Log#log.msg,
     Data = Log#log.data,
-    io_lib:format(Msg, Data);
+    case Data of
+        [] -> Msg;
+        _  -> io_lib:format(Msg, Data)
+    end;
 get_token_value(level, Log) ->
     atom_to_list(Log#log.level);
 get_token_value(new_line, _Log) ->

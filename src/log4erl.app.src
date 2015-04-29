@@ -1,0 +1,7 @@
+{application, log4erl,
+ [
+  {description, "Logger for erlang in the spirit of Log4J - customized for PMM Funnel, backward incompatible"},
+  {vsn, "1.0.0"},
+  {applications, [kernel, stdlib]},
+  {mod, {log4erl_app, []}}
+ ]}.
